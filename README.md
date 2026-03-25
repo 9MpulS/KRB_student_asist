@@ -36,9 +36,6 @@ The system indexes normative documents (PDF, DOCX, etc.) and enables semantic se
 ### Setup
 
 ```bash
-git clone <repo-url>
-cd KRB_student_asist
-
 # Copy and fill in environment variables
 cp .env.example .env
 ```
@@ -53,6 +50,13 @@ uv sync
 
 ```bash
 docker compose up -d
+```
+
+Then install the Ukrainian analysis plugin for Elasticsearch (first run only):
+
+```bash
+docker exec -it elasticsearch elasticsearch-plugin install analysis-ukrainian
+docker restart elasticsearch
 ```
 
 ### Initialize the database
@@ -82,6 +86,7 @@ KRB_student_asist/
 │   └── services/     # Business logic: RAG, LLM, indexing
 ├── main.py           # Application entry point
 ├── pyproject.toml    # Project dependencies
+├── docker-compose.yml# PostgreSQL and Elasticsearch services
 ├── .env.example      # Environment variables template
 └── LICENSE
 ```

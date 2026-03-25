@@ -1,0 +1,28 @@
+services:
+  postgresql:
+    image: bitnami/postgresql:latest
+    container_name: postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: postgres
+      POSTGRESQL_DATABASE: krb_assistant
+    volumes:
+      - pg_data:/bitnami/postgresql
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:10.3.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  pg_data:
+  es_data:
