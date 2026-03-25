@@ -15,10 +15,10 @@ def setup_logging() -> None:
 
 def get_logger(name: str) -> logging.Logger:
     """Отримати налаштований логер.
-    
+
     Args:
         name: Ім'я модуля/компонента
-        
+
     Returns:
         Налаштований Logger
     """

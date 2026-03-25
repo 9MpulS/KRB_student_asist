@@ -1,5 +1,6 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.logging import get_logger
+from src.db.models import Base
 
 logger = get_logger(__name__)
 
@@ -28,31 +30,29 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-from sqlalchemy import text
-from src.db.models import Base
-
 async def init_db():
     """Ініціалізація бази даних: створення розширень та таблиць."""
     try:
         async with engine.begin() as conn:
             # Створення розширення pgvector, якщо воно ще не створене
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-            
+
             # Створення всіх таблиць
             # run_sync дозволяє викликати синхронний metadata.create_all
             await conn.run_sync(Base.metadata.create_all)
-            
+
         logger.info("База даних успішно ініціалізована (таблиці та розширення створено)")
     except Exception as e:
         logger.error(f"Помилка при ініціалізації бази даних: {e}", exc_info=True)
         raise
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency для отримання async database session.
-    
+
     Yields:
         AsyncSession: Database session
-        
+
     Raises:
         Exception: При помилках роботи з БД
     """

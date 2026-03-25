@@ -71,7 +71,7 @@ uv run python -c "from src.db.database import init_db; import asyncio; asyncio.r
 uv run python main.py
 ```
 
-API available at: `http://localhost:8000`  
+API available at: `http://localhost:8000`
 Interactive docs: `http://localhost:8000/docs`
 
 ## Project Structure

@@ -1,15 +1,17 @@
-from uuid import UUID
 from pathlib import Path
-from typing import Optional
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.db.models import Document, Page, Chunk
-from src.db.repositories import DocumentRepository, PageRepository, ChunkRepository
-from src.services.parser_service import ParserService
-from src.services.embedding_service import EmbeddingService
-from src.services.elasticsearch_service import es_service
+
 from src.core.logging import get_logger
+from src.db.models import Chunk, Document, Page
+from src.db.repositories import ChunkRepository, DocumentRepository, PageRepository
+from src.services.elasticsearch_service import es_service
+from src.services.embedding_service import EmbeddingService
+from src.services.parser_service import ParserService
 
 logger = get_logger(__name__)
+
 
 class DocumentService:
     """Сервіс для комплексного керування документами (Парсинг -> Сторінки -> Чанки -> Вектори)."""
@@ -22,7 +24,7 @@ class DocumentService:
         self.parser = ParserService()
         self.embedding_service = EmbeddingService()
 
-    async def add_file(self, file_path: Path, title: Optional[str] = None) -> Document:
+    async def add_file(self, file_path: Path, title: str | None = None) -> Document:
         """
         Додає файл у систему. Керує транзакцією БД та індексацією в ES.
         """
@@ -58,7 +60,7 @@ class DocumentService:
             logger.info(f"[{doc.id}] Документ успішно проіндексовано в ES")
         except Exception as e:
             logger.error(f"[{doc.id}] Помилка індексації в Elasticsearch: {e}")
-            
+
         logger.info(f"[{doc.id}] Документ '{title}' успішно додано. Всього чанків: {total_chunks}")
         return doc
 
@@ -71,11 +73,7 @@ class DocumentService:
             raise ValueError(f"Документ з назвою '{title}' вже існує")
 
         # 2. Створюємо документ
-        doc = Document(
-            title=title,
-            source_file=str(file_path),
-            doc_type=file_path.suffix.upper().replace(".", "")
-        )
+        doc = Document(title=title, source_file=str(file_path), doc_type=file_path.suffix.upper().replace(".", ""))
         await self.doc_repo.create(doc)
         doc_id = doc.id
         logger.info(f"[{doc_id}] Створено запис документа")
@@ -89,11 +87,7 @@ class DocumentService:
                 continue
 
             # 3. Створюємо сторінку
-            page = Page(
-                document_id=doc_id,
-                page_number=page_num,
-                content=content
-            )
+            page = Page(document_id=doc_id, page_number=page_num, content=content)
             await self.page_repo.create(page)
             all_pages.append(page)
             logger.debug(f"[{doc_id}] Створено сторінку {page_num}")
@@ -105,7 +99,9 @@ class DocumentService:
 
             # Перевірка на ліміт чанків
             if total_chunks + len(chunk_texts) > MAX_CHUNKS:
-                logger.error(f"[{doc_id}] Перевищено ліміт чанків ({MAX_CHUNKS}). Поточна кількість: {total_chunks + len(chunk_texts)}")
+                logger.error(
+                    f"[{doc_id}] Перевищено ліміт чанків ({MAX_CHUNKS}). Поточна кількість: {total_chunks + len(chunk_texts)}"
+                )
                 raise ValueError(f"Документ занадто великий (перевищено ліміт у {MAX_CHUNKS} чанків)")
 
             # 5. Генеруємо вектори
@@ -120,22 +116,17 @@ class DocumentService:
             for i, (text, vector) in enumerate(zip(chunk_texts, embeddings)):
                 if vector is None:
                     continue
-                db_chunks.append(Chunk(
-                    page_id=page.id,
-                    content=text,
-                    embedding=vector,
-                    chunk_index=i
-                ))
+                db_chunks.append(Chunk(page_id=page.id, content=text, embedding=vector, chunk_index=i))
 
             if db_chunks:
                 await self.chunk_repo.create_bulk(db_chunks)
                 total_chunks += len(db_chunks)
-            
+
             logger.debug(f"[{doc_id}] Збережено {len(db_chunks)} чанків для сторінки {page_num}")
-        
+
         return doc, all_pages, total_chunks
 
-    async def get_document(self, doc_id: UUID) -> Optional[Document]:
+    async def get_document(self, doc_id: UUID) -> Document | None:
         """Отримує документ за його ID."""
         return await self.doc_repo.get_by_id(doc_id)
 
@@ -153,10 +144,10 @@ class DocumentService:
             else:
                 async with self.session.begin():
                     await self.doc_repo.clear_all()
-            
+
             # Очищення Elasticsearch
             await es_service.clear_index()
-            
+
             logger.info("Всі документи успішно видалені з БД та ES")
         except Exception as e:
             logger.error(f"Помилка при очищенні документів: {e}", exc_info=True)
@@ -165,7 +156,7 @@ class DocumentService:
     async def reindex_all(self, docs_dir: Path = Path("documents")) -> dict:
         """Очищає все та переіндексує файли з вказаної директорії."""
         await self.clear_all_documents()
-        
+
         if not docs_dir.exists():
             logger.warning(f"Директорія {docs_dir} не існує")
             return {"processed": 0, "errors": 0}
@@ -173,9 +164,9 @@ class DocumentService:
         supported_extensions = {".pdf", ".txt", ".docx", ".html"}
         processed = 0
         errors = 0
-        
+
         logger.info(f"Початок переіндексації з {docs_dir}...")
-        
+
         for file_path in docs_dir.iterdir():
             if file_path.suffix.lower() in supported_extensions:
                 try:
@@ -186,7 +177,7 @@ class DocumentService:
                 except Exception as e:
                     errors += 1
                     logger.error(f"Помилка при індексації {file_path.name}: {e}")
-                    
+
         logger.info(f"Переіндексація завершена. Оброблено: {processed}, помилок: {errors}")
         return {"processed": processed, "errors": errors}
 
@@ -195,12 +186,12 @@ class DocumentService:
         Видаляє документ та всі пов'язані з ним дані (сторінки, чанки) з БД та ES.
         """
         logger.info(f"Початок видалення документа: {doc_id}")
-        
+
         success = await self.doc_repo.delete_by_id(doc_id)
         if not success:
             logger.warning(f"Документ {doc_id} не знайдено для видалення")
             return False
-        
+
         await self.session.flush()
 
         # Видаляємо з Elasticsearch (навіть якщо транзакція БД вже закрита)

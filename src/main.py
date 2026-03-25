@@ -1,17 +1,18 @@
-import uvicorn
 import time
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
-
 from contextlib import asynccontextmanager
 
-from src.api.routes import questions, documents
-from src.db.database import init_db, check_db_health
+import uvicorn
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from src.api.routes import documents, questions
 from src.core.logging import get_logger
+from src.db.database import check_db_health, init_db
 
 logger = get_logger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,6 +21,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
     logger.info("Виконання lifespan shutdown...")
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -48,9 +50,7 @@ def create_app() -> FastAPI:
         start_time = time.perf_counter()
         response = await call_next(request)
         process_time = time.perf_counter() - start_time
-        logger.info(
-            f"Запит {request.method} {request.url.path} оброблено за {process_time:.4f} сек"
-        )
+        logger.info(f"Запит {request.method} {request.url.path} оброблено за {process_time:.4f} сек")
         response.headers["X-Process-Time"] = str(process_time)
         return response
 
@@ -58,24 +58,25 @@ def create_app() -> FastAPI:
     async def health_check():
         """Ендпоінт для моніторингу стану додатку."""
         db_ok = await check_db_health()
-        
+
         # Перевірка Elasticsearch (опціонально)
         try:
             from src.services.elasticsearch_service import es_service
+
             _ = await es_service.client.info()
             es_ok = True
         except Exception:
             es_ok = False
 
         status_code = status.HTTP_200_OK if db_ok else status.HTTP_503_SERVICE_UNAVAILABLE
-        
+
         return JSONResponse(
             status_code=status_code,
             content={
                 "status": "ok" if db_ok else "degraded",
                 "database": "up" if db_ok else "down",
-                "elasticsearch": "up" if es_ok else "down"
-            }
+                "elasticsearch": "up" if es_ok else "down",
+            },
         )
 
     # Глобальні обробники помилок
@@ -84,18 +85,18 @@ def create_app() -> FastAPI:
         logger.error(f"Необроблена помилка: {exc}", exc_info=True)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error. Please see logs for details."}
+            content={"detail": "Internal server error. Please see logs for details."},
         )
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
         logger.warning(f"Помилка валідації запиту: {exc.errors()}")
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"detail": exc.errors(), "body": exc.body}
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": exc.errors(), "body": exc.body}
         )
 
     return app
+
 
 app = create_app()
 
