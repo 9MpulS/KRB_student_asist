@@ -1,102 +1,91 @@
-# 🎓 KRB Student Assistant
+# KRB Student Assistant
 
-RAG-асистент для студентів СумДУ, що дозволяє отримувати відповіді на запитання щодо нормативних документів університету на основі технології Retrieval-Augmented Generation (RAG).
+A RAG-based assistant for Sumy State University students, providing answers to questions about university regulations and normative documents.
 
-## 📌 Опис проєкту
+## Overview
 
-Система індексує нормативні документи (PDF, DOCX тощо) та забезпечує семантичний пошук по їх змісту. Користувач ставить запитання природною мовою — асистент знаходить релевантні фрагменти документів і генерує відповідь за допомогою LLM.
+The system indexes normative documents (PDF, DOCX, etc.) and enables semantic search across their content. Users ask questions in natural language — the assistant retrieves relevant document fragments and generates an answer using an LLM.
 
-### Основні можливості
+**Key features:**
 
-- 📄 Завантаження та індексація нормативних документів
-- 🔍 Гібридний пошук: векторний (pgvector) + повнотекстовий (Elasticsearch)
-- 🤖 Генерація відповідей через Groq API (LLaMA)
-- 🌐 REST API на базі FastAPI
-- 🐳 Повна підтримка Docker
+- Upload and index normative documents
+- Hybrid search: vector (pgvector) + full-text (Elasticsearch)
+- Answer generation via Groq API (LLaMA 3)
+- REST API built with FastAPI
 
-## 🛠️ Технологічний стек
+## Tech Stack
 
-| Компонент | Технологія |
-|-----------|------------|
-| Web Framework | FastAPI |
-| Database | PostgreSQL + pgvector |
-| Full-text search | Elasticsearch |
-| Embeddings | Ollama (paraphrase-multilingual) |
-| LLM | Groq API (LLaMA 3) |
-| Package manager | uv |
+| Component       | Technology                        |
+|-----------------|-----------------------------------|
+| Web Framework   | FastAPI                           |
+| Database        | PostgreSQL + pgvector             |
+| Full-text search| Elasticsearch                     |
+| Embeddings      | Ollama (paraphrase-multilingual)  |
+| LLM             | Groq API (LLaMA 3)               |
+| Package manager | uv                                |
 
-## 🚀 Запуск проєкту
+## Getting Started
 
-### Передумови
+### Prerequisites
 
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv)
-- Docker & Docker Compose
-- [Ollama](https://ollama.com/) із завантаженою моделлю `paraphrase-multilingual`
+- Docker and Docker Compose
+- [Ollama](https://ollama.com/) with the `paraphrase-multilingual` model pulled
 
-### 1. Клонування та налаштування
+### Setup
 
 ```bash
 git clone <repo-url>
 cd KRB_student_asist
 
-# Скопіюйте та заповніть .env
+# Copy and fill in environment variables
 cp .env.example .env
 ```
 
-### 2. Встановлення залежностей
+### Install dependencies
 
 ```bash
 uv sync
 ```
 
-### 3. Запуск сервісів (PostgreSQL + Elasticsearch)
+### Start services (PostgreSQL + Elasticsearch)
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Ініціалізація БД
+### Initialize the database
 
 ```bash
-uv run python scripts/init_db.py
+uv run python -c "from src.db.database import init_db; import asyncio; asyncio.run(init_db())"
 ```
 
-### 5. Запуск сервера
+### Run the server
 
 ```bash
 uv run python main.py
 ```
 
-API буде доступне за адресою: `http://localhost:8000`  
-Документація: `http://localhost:8000/docs`
+API available at: `http://localhost:8000`  
+Interactive docs: `http://localhost:8000/docs`
 
-## 🧪 Тестування
-
-```bash
-uv run pytest
-```
-
-## 📁 Структура проєкту
+## Project Structure
 
 ```
 KRB_student_asist/
 ├── src/
-│   ├── api/          # FastAPI роутери
-│   ├── core/         # Налаштування, конфіг
-│   ├── db/           # Моделі БД, репозиторії
-│   ├── schemas/      # Pydantic схеми
-│   └── services/     # Бізнес-логіка (RAG, LLM, індексація)
-├── scripts/          # Утилітарні скрипти
-├── tests/            # Тести
-├── retrieval_benchmark/ # Бенчмарки пошуку
-├── main.py           # Точка входу
-├── pyproject.toml    # Залежності проєкту
-├── init_db.sql       # SQL-схема бази даних
-├── .env.example      # Приклад змінних середовища
+│   ├── api/          # FastAPI routers and endpoints
+│   ├── core/         # Configuration and settings
+│   ├── db/           # Database models and repositories
+│   ├── schemas/      # Pydantic schemas
+│   └── services/     # Business logic: RAG, LLM, indexing
+├── main.py           # Application entry point
+├── pyproject.toml    # Project dependencies
+├── .env.example      # Environment variables template
 └── LICENSE
 ```
 
-## 📝 Ліцензія
+## License
 
-MIT — деталі у файлі [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE) for details.
