@@ -9,7 +9,6 @@ from contextlib import asynccontextmanager
 
 from src.api.routes import questions, documents
 from src.db.database import init_db, check_db_health
-from src.core.config import settings
 from src.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -63,7 +62,7 @@ def create_app() -> FastAPI:
         # Перевірка Elasticsearch (опціонально)
         try:
             from src.services.elasticsearch_service import es_service
-            es_info = await es_service.client.info()
+            _ = await es_service.client.info()
             es_ok = True
         except Exception:
             es_ok = False
