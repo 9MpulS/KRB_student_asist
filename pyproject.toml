@@ -36,6 +36,8 @@ asyncio_default_fixture_loop_scope = "function"
 
 [dependency-groups]
 dev = [
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.3",
     "mypy>=1.19.1",
     "pre-commit>=4.5.1",
     "pytest-cov>=7.0.0",
@@ -48,8 +50,11 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "UP"] # pyflakes, pycodestyle, isort, pyupgrade
-ignore = ["E501"]
+select = ["E", "F", "I", "W", "UP", "D"] # pyflakes, pycodestyle, isort, pyupgrade, pydocstyle
+ignore = ["E501", "D100", "D104", "D106"]  # Ignore missing docstrings in public modules, packages, and nested classes for now.
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.mypy]
 python_version = "3.12"

@@ -14,8 +14,20 @@ router = APIRouter(prefix="/questions", tags=["questions"])
 
 @router.post("", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest, rag_service: RAGService = Depends(get_rag_service)):
-    """
-    Обробити питання користувача через RAG пайплайн.
+    """Обробити питання користувача через RAG пайплайн.
+
+    Args:
+        request (QuestionRequest): Тіло запиту з текстом питання від користувача.
+        rag_service (RAGService): Сервіс RAG, автоматично інжектиться через FastAPI.
+
+    Returns:
+        QuestionResponse: Відповідь, згенерована RAG-системою, з джерелами та текстом.
+
+    Raises:
+        HTTPException:
+            - **504**: Timeout зовнішніх AI-сервісів.
+            - **503**: Проблема з'єднання.
+            - **500**: Внутрішня помилка обробки.
     """
     logger.info(f"API запит: питання '{request.question}'")
     try:

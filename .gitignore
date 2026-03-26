@@ -27,6 +27,8 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+site/
+docs_archive.zip
 *.log
 
 # =============================================================

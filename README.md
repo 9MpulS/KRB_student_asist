@@ -91,6 +91,17 @@ KRB_student_asist/
 └── LICENSE
 ```
 
+## Documentation
+
+Цей проєкт використовує **MkDocs** зі стилем **Material**, а також плагін `mkdocstrings` для автоматичної генерації документації з коду.
+Для документування коду ми використовуємо **Google Docstring Format**.
+Будь ласка, забезпечуйте наявність docstrings для всіх публічних модулів, класів, методів та функцій.
+
+Для генерації та перегляду документації локально:
+```bash
+uv run mkdocs serve
+```
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.

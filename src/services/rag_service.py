@@ -19,8 +19,7 @@ class RAGService:
     """Сервіс для реалізації RAG (Retrieval-Augmented Generation) пайплайну."""
 
     def __init__(self, session: AsyncSession):
-        """
-        Ініціалізація сервісу.
+        """Ініціалізація сервісу.
 
         Args:
             session: Асинхронна сесія бази даних.
@@ -33,8 +32,7 @@ class RAGService:
         logger.info("RAGService ініціалізовано")
 
     async def _get_relevant_chunks_vec(self, question_embedding: list[float], limit: int = 5) -> list[Chunk]:
-        """
-        Знаходить найбільш релевантні фрагменти тексту для заданого вектора питання (Векторний пошук).
+        """Знаходить найбільш релевантні фрагменти тексту для заданого вектора питання (Векторний пошук).
 
         Args:
             question_embedding: Векторне представлення питання.
@@ -55,8 +53,7 @@ class RAGService:
             return []
 
     async def _get_relevant_chunks_fts(self, query: str, limit: int = 5) -> list[Chunk]:
-        """
-        Знаходить релевантні фрагменти тексту за допомогою повнотекстового пошуку (FTS).
+        """Знаходить релевантні фрагменти тексту за допомогою повнотекстового пошуку (FTS).
 
         Args:
             query: Текстовий запит.
@@ -77,9 +74,7 @@ class RAGService:
             return []
 
     async def _get_relevant_pages_es(self, query: str, limit: int | None = None) -> list[Page]:
-        """
-        Знаходить релевантні сторінки за допомогою Elasticsearch.
-        """
+        """Знаходить релевантні сторінки за допомогою Elasticsearch."""
         if limit is None:
             limit = settings.RETRIEVAL_LIMIT_ES
 
@@ -103,8 +98,8 @@ class RAGService:
             return []
 
     async def retrieve_chunks(self, question: str) -> list[Chunk]:
-        """
-        Метод пошуку релевантних фрагментів тексту.
+        """Метод пошуку релевантних фрагментів тексту.
+
         Використовує гібридний підхід: Векторний пошук + Повнотекстовий пошук (згенерований LLM).
 
         Args:
@@ -144,8 +139,22 @@ class RAGService:
         return unique_chunks
 
     async def ask_question(self, question: str) -> QuestionResponse:
-        """
-        Основний метод RAG-пайплайну для отримання відповіді на питання.
+        """Основний метод RAG-пайплайну для отримання відповіді на питання.
+
+        Цей метод реалізовує весь цикл Retrieval-Augmented Generation:
+        1. Виконує пошук через `retrieve_chunks` (Вектор + FTS).
+        2. Ранжує результати за допомогою LLM-скорингу.
+        3. Збирає контекст із кращих фрагментів тексту.
+        4. Генерує кінцеву текстову відповідь за допомогою LLM.
+
+        Args:
+            question (str): Текст запиту користувача для пошуку нормативної відповіді.
+
+        Returns:
+            QuestionResponse: Згенерована модель відповіді з текстом та списком джерел.
+
+        Raises:
+            Exception: Якщо LLM-сервіс поверне помилку під час генерації відповіді.
         """
         start_time = time.perf_counter()
         logger.info(f"Отримано нове питання: '{question}'")

@@ -1,0 +1,38 @@
+site_name: KRB Student Assistant Docs
+site_description: Documentation for the Sumy State University RAG-based assistant.
+
+theme:
+  name: material
+  language: uk
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: true
+            show_category_heading: true
+            merge_init_into_class: true
+
+nav:
+  - Головна: index.md
+  - API Reference:
+      - App: api/main.md
+      - Routes: api/routes.md
+      - Services: api/services.md
+      - Schemas: api/schemas.md
+  - Керівництво:
+      - Огляд інструментів: tools_overview.md
+      - Інструкція з документації: generate_docs.md
+      - Архітектура: architecture.md

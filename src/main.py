@@ -24,10 +24,23 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    """Ініціалізація та налаштування головного екземпляра FastAPI додатка."""
+    tags_metadata = [
+        {
+            "name": "questions",
+            "description": "Операції з питанням-відповіддю RAG асистента. **Головний ендпоінт** системи.",
+        },
+        {
+            "name": "documents",
+            "description": "Управління документами: завантаження, індексація, парсинг.",
+        },
+    ]
+
     app = FastAPI(
         title="KRB Student Assistant API",
-        description="RAG-based assistant for SumDU students",
+        description="RAG-based API для автоматичних відповідей по нормативних документах СумДУ.",
         version="0.1.0",
+        openapi_tags=tags_metadata,
         lifespan=lifespan,
     )
 
